@@ -3,7 +3,11 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 
-helm install obs prometheus-community/kube-prometheus-stack -n monitoring
+helm install prometheus prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  --set grafana.adminPassword=admin \
+  --set prometheus.prometheusSpec.resources.requests.memory=1Gi \
+  --set prometheus.prometheusSpec.resources.limits.memory=2Gi
 
 
 
@@ -40,6 +44,42 @@ helm install elasticsearch elastic/elasticsearch \
   --set resources.limits.memory="1Gi" \
   --set preInstallJob.enabled=false
 
-kubectl port-forward deployment/kibana-kibana 5601:5601 -n monitoring
 
 
+
+helm install logstash elastic/logstash \
+  -n monitoring \
+  --set persistence.enabled=false \
+  --set resources.requests.cpu="100m" \
+  --set resources.requests.memory="512Mi" \
+  --set resources.limits.memory="1Gi" \
+  --set logstashConfig."logstash\.yml"="http.host: 0.0.0.0\nxpack.monitoring.enabled: false" \
+  --set logstashPipeline."logstash\.conf"="
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    filter {
+      if [kubernetes][container][name] == 'log-generator' {
+        mutate { add_tag => ['learning_logstash'] }
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ['http://elasticsearch-master:9200']
+        index => 'logstash-%{+YYYY.MM.dd}'
+      }
+    }"
+
+
+helm install filebeat elastic/filebeat \
+  -n monitoring \
+  --set daemonset.resources.requests.cpu="100m" \
+  --set daemonset.resources.requests.memory="100Mi"
+
+
+helm install my-log-gen . -n monitoring
+
+helm upgrade my-log-gen . -n monitoring -f log-gen-override.yaml
+kubectl rollout restart deployment/my-log-gen-log-generator -n monitoring

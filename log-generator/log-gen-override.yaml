@@ -1,0 +1,4 @@
+command: ["/bin/sh"]
+args:
+  - "-c"
+  - "while true; do random-logger --log-group-size=10; sleep 5; done"

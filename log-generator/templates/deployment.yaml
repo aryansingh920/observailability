@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "log-generator.fullname" . }}
+  namespace: {{ .Release.Namespace | default "monitoring" }}
+  labels:
+    app: {{ include "log-generator.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "log-generator.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "log-generator.name" . }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- if .Values.command }}
+          command: {{ .Values.command | toJson }}
+          {{- end }}
+          {{- if .Values.args }}
+          args: {{ .Values.args | toJson }}
+          {{- else }}
+          args:
+            - "--log-group-size={{ .Values.config.logGroupSize }}"
+            - "--last-log-group-size={{ .Values.config.lastLogGroupSize }}"
+            - "--sleep-time={{ .Values.config.sleepTime }}"
+          {{- end }}

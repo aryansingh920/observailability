@@ -13,3 +13,7 @@ kubectl get pods -A
 kubectl delete job pre-install-kibana-kibana -n monitoring
 
 
+
+kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80
+
+kubectl port-forward deployment/kibana-kibana 5601:5601 -n monitoring
