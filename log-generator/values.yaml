@@ -1,29 +1,14 @@
-persistence:
-  enabled: false
+replicaCount: 1
 
-resources:
-  requests:
-    cpu: "100m"
-    memory: "512Mi"
-  limits:
-    memory: "1536Mi"
+image:
+  repository: chentex/random-logger
+  tag: latest
 
-logstashConfig:
-  logstash.yml: |
-    http.host: 0.0.0.0
+args:
+  - "100"
+  - "500"
 
-logstashPipeline:
-  logstash.conf: |
-    input {
-      beats { port => 5044 }
-    }
-    output {
-      elasticsearch {
-        hosts => ["https://elasticsearch-master:9200"]
-        user => "elastic"
-        password => ""
-        ssl => true
-        ssl_certificate_verification => false
-        index => "logstash-%{+YYYY.MM.dd}"
-      }
-    }
+config:
+  logGroupSize: 10
+  lastLogGroupSize: 10
+  sleepTime: 500

@@ -1,0 +1,29 @@
+persistence:
+  enabled: false
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    memory: "1536Mi"
+
+logstashConfig:
+  logstash.yml: |
+    http.host: 0.0.0.0
+
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats { port => 5044 }
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        user => "elastic"
+        password => "kyYoNjdZ5rst96Qq"
+        ssl => true
+        ssl_certificate_verification => false
+        index => "logstash-%{+YYYY.MM.dd}"
+      }
+    }

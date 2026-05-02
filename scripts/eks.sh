@@ -4,3 +4,6 @@ kubectl get pods --namespace=monitoring -l release=kibana -w
 kubectl get secrets --namespace=monitoring elasticsearch-master-credentials -ojsonpath='{.data.password}' | base64 -d
 # 3. Retrieve the kibana service account token.
 kubectl get secrets --namespace=monitoring kibana-kibana-es-token -ojsonpath='{.data.token}' | base64 -d
+
+
+kubectl port-forward -n monitoring svc/elasticsearch-master 9200:9200
