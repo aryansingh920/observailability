@@ -1,16 +1,29 @@
-replicaCount: 1
+persistence:
+  enabled: false
 
-image:
-  repository: chentex/random-logger
-  tag: latest
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    memory: "1536Mi"
 
-# Add these — your deployment.yaml template needs to support command/args override
-command: ["/bin/sh"]
-args:
-  - "-c"
-  - "while true; do random-logger --log-group-size=10; sleep 5; done"
+logstashConfig:
+  logstash.yml: |
+    http.host: 0.0.0.0
 
-config:
-  logGroupSize: 10
-  lastLogGroupSize: 10
-  sleepTime: 500
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats { port => 5044 }
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        user => "elastic"
+        password => ""
+        ssl => true
+        ssl_certificate_verification => false
+        index => "logstash-%{+YYYY.MM.dd}"
+      }
+    }
